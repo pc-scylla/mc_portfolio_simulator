@@ -45,6 +45,9 @@
 
 import argparse
 import sys
+import tkinter as tk
+from tkinter import messagebox
+from tkinter import ttk
 
 # Define exit codes
 EXIT_SUCCESS = 0
@@ -69,87 +72,181 @@ except ModuleNotFoundError:
     print("pip install matplotlib")
     sys.exit(EXIT_FAILURE)  # Exit with FAILURE
 
-def monte_carlo_simulation(**kwargs):
-    print("Parameters:")
-    print_args_nicely(**kwargs)
-    initial_investment = kwargs['initial_investment']
-    mean_return = kwargs['mean_return']
-    volatility = kwargs['volatility']
-    years = kwargs['years']
-    simulations = kwargs['simulations']
-    plt_show = kwargs['plt_show']
-    withdrawal_rate = kwargs['withdrawal_rate']
-    inflation_rate = kwargs['inflation_rate']
-
-
-    # Monte Carlo Simulation
-    portfolio_values = np.zeros((simulations, years + 1))  # Matrix to store portfolio values for all simulations
-    portfolio_values[:, 0] = initial_investment  # Initialize portfolio values for year 0 as the initial investment
-    depletion_count = 0  # Counter to track the number of simulations where the portfolio is depleted before 40 years
-
-    # Run simulations
-    for i in range(simulations):
-        withdrawal = initial_investment * withdrawal_rate  # Constant annual withdrawal (£30,000 for the first year)
-        for year in range(1, years + 1):
-            # Simulate annual market returns using a normal distribution
-            random_return = np.random.normal(mean_return, volatility)
-            portfolio_values[i, year] = portfolio_values[i, year - 1] * (1 + random_return)
-
-            # Subtract annual withdrawal from the portfolio
-            portfolio_values[i, year] -= withdrawal
-
-            # Check if the portfolio is depleted (value drops to £0 or below)
-            if portfolio_values[i, year] < 0:
-                portfolio_values[i, year] = 0  # Set portfolio value to £0 (no negative values allowed)
-                depletion_count += 1  # Increment the depletion counter
-                break  # End simulation for this portfolio once it's depleted
-
-    # Calculate the probability of portfolio depletion before 40 years
-    depletion_probability = (depletion_count / simulations) * 100  # Percentage of simulations with depletion
-
-    # Adjust inflation impact
-    inflation_factor = (1 + inflation_rate) ** years  # Factor to account for 40 years of inflation
-    inflation_adjusted_mean_final_value = np.mean(portfolio_values[:, -1]) / inflation_factor  # Adjusted portfolio mean
-
-    # Plot portfolio values for all simulations
-    if plt_show:
-        plt.figure(figsize=(10, 6))  # Set figure size for the plot
-        for i in range(simulations):
-            plt.plot(portfolio_values[i], alpha=0.1, color='blue')  # Plot portfolio values for each simulation
-        plt.title('Monte Carlo Simulation of Portfolio Value with Constant Withdrawals')
-        plt.xlabel('Years')  # Label for the x-axis (years of simulation)
-        plt.ylabel('Portfolio Value (£)')  # Label for the y-axis (portfolio value in £)
-        plt.show()  # Display the plot
-
-    # Summary Statistics
-    final_values = portfolio_values[:, -1]  # Extract final portfolio values after 40 years
-    mean_final_value = np.mean(final_values)  # Calculate the mean final portfolio value
-    std_final_value = np.std(final_values)  # Calculate the standard deviation of final portfolio values
-    inflation_adjusted_std_final_val = std_final_value / inflation_factor
-    # Print results
-    print(f"\nInitial conditions")
-    print(f"==================")
-    print(f"     Portfolio initial value: £{initial_investment}")
-    print(f"              Inflation rate: {inflation_rate*100:.2f}%")
-    print(f"   Expected portfolio return: {mean_return*100:.2f}%")
-    print(f"  Withdrawal amount per year: £{withdrawal}")
-    print(f"      Annual Withdrawal rate: {withdrawal_rate}")
-    print(f"Simulation duration in years: {years}")
-    print("")
-    print("Results:")
-    print("========")
-    print(f"Without inflation- Mean final portfolio value: £{mean_final_value:.2f}")
-    print(f"Without inflation  - SD final portfolio value: £{std_final_value:.2f}")
-    print(f"Inflation-adjusted mean final portfolio value: £{inflation_adjusted_mean_final_value:.2f}")
-    print(f"Inflation-adjusted - SD final portfolio value: £{inflation_adjusted_std_final_val:.2f}")
-    print(f"Probability of portfolio depletion before {years} years: {depletion_probability:.2f}%")
-
 # -- Both args and kwargs --
 def print_args_nicely(*args, **kwargs):
     for arg in args:
         print(f"P:{arg}")
     for kwarg, value in kwargs.items():
         print(f"D:{kwarg}: {value}")
+
+class SimulationApp:
+    def __init__(self, **kwargs):
+        print("Parameters:")
+        print_args_nicely(**kwargs)
+        self.initial_investment = kwargs['initial_investment']
+        self.mean_return = kwargs['mean_return']
+        self.volatility = kwargs['volatility']
+        self.years = kwargs['years']
+        self.simulations = kwargs['simulations']
+        self.plt_show = kwargs['plt_show']
+        self.withdrawal_rate = kwargs['withdrawal_rate']
+        self.inflation_rate = kwargs['inflation_rate']
+        
+        self.root = tk.Tk()
+        self.root.title("Monte Carlo Simulation of Portfolio")
+
+        # Labels and entries
+        tk.Label(self.root, text="Initial Investment:").grid(row=0, column=0, sticky="e")
+        self.entry_initial_investment = tk.Entry(self.root)
+        self.entry_initial_investment.insert(0, str(self.initial_investment))
+        self.entry_initial_investment.grid(row=0, column=1)
+
+        tk.Label(self.root, text="Mean Return (e.g. 0.07 for 7%):").grid(row=1, column=0, sticky="e")
+        self.entry_mean_return = tk.Entry(self.root)
+        self.entry_mean_return.insert(0, str(self.mean_return))
+        self.entry_mean_return.grid(row=1, column=1)
+
+        tk.Label(self.root, text="Volatility (e.g. 0.015 for 15%):").grid(row=2, column=0, sticky="e")
+        self.entry_volatility = tk.Entry(self.root)
+        self.entry_volatility.insert(0, str(self.volatility))
+        self.entry_volatility.grid(row=2, column=1)
+
+        tk.Label(self.root, text="Years:").grid(row=3, column=0, sticky="e")
+        self.entry_years = tk.Entry(self.root)
+        self.entry_years.insert(0, str(self.years))
+        self.entry_years.grid(row=3, column=1)
+
+        tk.Label(self.root, text="Simulations:").grid(row=4, column=0, sticky="e")
+        self.entry_simulations = tk.Entry(self.root)
+        self.entry_simulations.insert(0, str(self.simulations))
+        self.entry_simulations.grid(row=4, column=1)
+
+        tk.Label(self.root, text="Inflation Rate (e.g. 0.039 for 3.9%:").grid(row=5, column=0, sticky="e")
+        self.entry_inflation_rate = tk.Entry(self.root)
+        self.entry_inflation_rate.insert(0, str(self.inflation_rate))
+        self.entry_inflation_rate.grid(row=5, column=1)
+
+        tk.Label(self.root, text="Withdrawal Rate (e.g. 0.03 for 3%):").grid(row=6, column=0, sticky="e")
+        self.entry_withdrawal_rate = tk.Entry(self.root)
+        self.entry_withdrawal_rate.insert(0, str(self.withdrawal_rate))
+        self.entry_withdrawal_rate.grid(row=6, column=1)
+        
+        # Checkbox for Show plot
+        self.plt_show_tk = tk.BooleanVar(value=self.plt_show)
+        self.checkbox_show_plot = tk.Checkbutton(self.root, text="Show plot", variable=self.plt_show_tk)
+        self.checkbox_show_plot.grid(row=7, column=0, columnspan=2)
+
+        # Submit button
+        submit_button = tk.Button(self.root, text="Submit", command=self.on_submit)
+        submit_button.grid(row=8, column=0, columnspan=2)
+
+        # Read-only text box for results
+        tk.Label(self.root, text="Results:").grid(row=9, column=0, sticky="nw")
+        self.result_box = tk.Text(self.root, height=5, width=60, state='disabled', wrap="word")
+        self.result_box.grid(row=9, column=0, columnspan=2)
+
+    def on_submit(self):
+        try:
+            self.initial_investment = float(self.entry_initial_investment.get())
+            self.mean_return = float(self.entry_mean_return.get())
+            self.volatility = float(self.entry_volatility.get())
+            self.years = int(self.entry_years.get())
+            self.simulations = int(self.entry_simulations.get())
+            self.inflation_rate = float(self.entry_inflation_rate.get())
+            self.withdrawal_rate = float(self.entry_withdrawal_rate.get())
+            
+            # Display the values for debugging (you can replace this with your actual processing logic)
+            #messagebox.showinfo("Input Values", f"Initial Investment: {self.initial_investment}\n"
+            #                                    f"Mean Return: {self.mean_return}\n"
+            #                                    f"Volatility: {self.volatility}\n"
+            #                                    f"Years: {self.years}\n"
+            #                                    f"Simulations: {self.simulations}\n"
+            #                                    f"Inflation Rate: {self.inflation_rate}\n"
+            #                                    f"Withdrawal Rate: {self.withdrawal_rate}")
+            self.monte_carlo_simulation()                                    
+        except ValueError as e:
+            messagebox.showerror("Invalid Input", "Please make sure all inputs are valid.")
+
+    def monte_carlo_simulation(self):
+        # Monte Carlo Simulation
+        portfolio_values = np.zeros((self.simulations, self.years + 1))  # Matrix to store portfolio values for all simulations
+        portfolio_values[:, 0] = self.initial_investment  # Initialize portfolio values for year 0 as the initial investment
+        depletion_count = 0  # Counter to track the number of simulations where the portfolio is depleted before 40 years
+
+        # Run simulations
+        for i in range(self.simulations):
+            withdrawal = self.initial_investment * self.withdrawal_rate  # Constant annual withdrawal (£30,000 for the first year)
+            for year in range(1, self.years + 1):
+                # Simulate annual market returns using a normal distribution
+                random_return = np.random.normal(self.mean_return, self.volatility)
+                portfolio_values[i, year] = portfolio_values[i, year - 1] * (1 + random_return)
+
+                # Subtract annual withdrawal from the portfolio
+                portfolio_values[i, year] -= withdrawal
+
+                # Check if the portfolio is depleted (value drops to £0 or below)
+                if portfolio_values[i, year] < 0:
+                    portfolio_values[i, year] = 0  # Set portfolio value to £0 (no negative values allowed)
+                    depletion_count += 1  # Increment the depletion counter
+                    break  # End simulation for this portfolio once it's depleted
+
+        # Calculate the probability of portfolio depletion before 40 years
+        depletion_probability = (depletion_count / self.simulations) * 100  # Percentage of simulations with depletion
+
+        # Adjust inflation impact
+        inflation_factor = (1 + self.inflation_rate) ** self.years  # Factor to account for 40 years of inflation
+        inflation_adjusted_mean_final_value = np.mean(portfolio_values[:, -1]) / inflation_factor  # Adjusted portfolio mean
+
+        # Plot portfolio values for all simulations
+        self.plt_show = self.plt_show_tk.get()
+        if self.plt_show:
+            plt.figure(figsize=(10, 6))  # Set figure size for the plot
+            for i in range(self.simulations):
+                plt.plot(portfolio_values[i], alpha=0.1, color='blue')  # Plot portfolio values for each simulation
+            plt.title('Monte Carlo Simulation of Portfolio Value with Constant Withdrawals')
+            plt.xlabel('Years')  # Label for the x-axis (years of simulation)
+            plt.ylabel('Portfolio Value (£)')  # Label for the y-axis (portfolio value in £)
+            plt.show()  # Display the plot
+
+        # Summary Statistics
+        final_values = portfolio_values[:, -1]  # Extract final portfolio values after 40 years
+        mean_final_value = np.mean(final_values)  # Calculate the mean final portfolio value
+        std_final_value = np.std(final_values)  # Calculate the standard deviation of final portfolio values
+        inflation_adjusted_std_final_val = std_final_value / inflation_factor
+
+        # Prepare result text
+        result_text = (f"Without inflation- Mean final portfolio value: £{mean_final_value:.2f}\n"
+                       f"Without inflation  - SD final portfolio value: £{std_final_value:.2f}\n"
+                       f"Inflation-adjusted mean final portfolio value: £{inflation_adjusted_mean_final_value:.2f}\n"
+                       f"Inflation-adjusted - SD final portfolio value: £{inflation_adjusted_std_final_val:.2f}\n"
+                       f"Probability of portfolio depletion before {self.years} years: {depletion_probability:.2f}%")
+
+        # Display results in read-only text box
+        self.result_box.config(state='normal')
+        self.result_box.delete('1.0', tk.END)
+        self.result_box.insert(tk.END, result_text)
+        self.result_box.config(state='disabled')
+
+        # Print results
+        print(f"\nInitial conditions")
+        print(f"==================")
+        print(f"     Portfolio initial value: £{self.initial_investment}")
+        print(f"              Inflation rate: {self.inflation_rate*100:.2f}%")
+        print(f"   Expected portfolio return: {self.mean_return*100:.2f}%")
+        print(f"  Withdrawal amount per year: £{withdrawal}")
+        print(f"      Annual Withdrawal rate: {self.withdrawal_rate}")
+        print(f"Simulation duration in years: {self.years}")
+        print("")
+        print("Results:")
+        print("========")
+        print(f"Without inflation- Mean final portfolio value: £{mean_final_value:.2f}")
+        print(f"Without inflation  - SD final portfolio value: £{std_final_value:.2f}")
+        print(f"Inflation-adjusted mean final portfolio value: £{inflation_adjusted_mean_final_value:.2f}")
+        print(f"Inflation-adjusted - SD final portfolio value: £{inflation_adjusted_std_final_val:.2f}")
+        print(f"Probability of portfolio depletion before {self.years} years: {depletion_probability:.2f}%")
+
+    def run(self):
+        self.root.mainloop()
 
 def main():
     # Set up argument parser
@@ -199,7 +296,7 @@ def main():
         help=r'Constant withdrawal rate (e.g. 0.03 for 3% of initial investment per year')
     args = parser.parse_args()
 
-    monte_carlo_simulation(initial_investment=args.portfolio_value,
+    app = SimulationApp(initial_investment=args.portfolio_value,
                            mean_return=args.mean_return,
                            volatility=args.volatility,
                            years=args.years,
@@ -207,6 +304,7 @@ def main():
                            plt_show=args.display,
                            inflation_rate=args.inflation_rate,
                            withdrawal_rate=args.withdrawal_rate)
+    app.run()
 
 if __name__ == "__main__":
     main()
