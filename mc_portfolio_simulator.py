@@ -91,6 +91,7 @@ class SimulationApp:
         self.plt_show = kwargs['plt_show']
         self.withdrawal_rate = kwargs['withdrawal_rate']
         self.inflation_rate = kwargs['inflation_rate']
+        self.dynamic_withdraw = kwargs['dynamic_withdraw']
 
         self.root = tk.Tk()
         self.root.title("Monte Carlo Simulation of Portfolio")
@@ -131,19 +132,24 @@ class SimulationApp:
         self.entry_withdrawal_rate.insert(0, str(self.withdrawal_rate))
         self.entry_withdrawal_rate.grid(row=6, column=1)
 
+        # Checkbox for dynamic withdrawal %withdrawal_rate of portfolio
+        self.dynamic_withdraw_tk = tk.BooleanVar(value=self.dynamic_withdraw)
+        self.checkbox_dynamic_withdraw = tk.Checkbutton(self.root, text="Dynamic Withdrawal (Portfolio(Yn)*Withdrawal Rate)", variable=self.dynamic_withdraw_tk)
+        self.checkbox_dynamic_withdraw.grid(row=7, column=0, columnspan=2)
+
         # Checkbox for Show plot
         self.plt_show_tk = tk.BooleanVar(value=self.plt_show)
         self.checkbox_show_plot = tk.Checkbutton(self.root, text="Show plot", variable=self.plt_show_tk)
-        self.checkbox_show_plot.grid(row=7, column=0, columnspan=2)
+        self.checkbox_show_plot.grid(row=8, column=0, columnspan=2)
 
         # Submit button
         submit_button = tk.Button(self.root, text="Submit", command=self.on_submit)
-        submit_button.grid(row=8, column=0, columnspan=2)
+        submit_button.grid(row=9, column=0, columnspan=2)
 
         # Read-only text box for results
         tk.Label(self.root, text="Results:").grid(row=9, column=0, sticky="nw")
-        self.result_box = tk.Text(self.root, height=5, width=60, state='disabled', wrap="word")
-        self.result_box.grid(row=9, column=0, columnspan=2)
+        self.result_box = tk.Text(self.root, height=6, width=60, state='disabled', wrap="word")
+        self.result_box.grid(row=10, column=0, columnspan=2)
 
     def on_submit(self):
         try:
@@ -171,9 +177,10 @@ class SimulationApp:
         # Monte Carlo Simulation
         portfolio_values = np.zeros((self.simulations, self.years + 1))  # Matrix to store portfolio values for all simulations
         portfolio_values[:, 0] = self.initial_investment  # Initialize portfolio values for year 0 as the initial investment
-        depletion_count = 0  # Counter to track the number of simulations where the portfolio is depleted before 40 years
+        depletion_count = 0  # Counter to track the number of simulations where the portfolio is depleted before self.years
 
         # Run simulations
+        self.dynamic_withdraw = self.dynamic_withdraw_tk.get()
         for i in range(self.simulations):
             withdrawal = self.initial_investment * self.withdrawal_rate  # Constant annual withdrawal (£30,000 for the first year)
             for year in range(1, self.years + 1):
@@ -181,6 +188,11 @@ class SimulationApp:
                 random_return = np.random.normal(self.mean_return, self.volatility)
                 portfolio_values[i, year] = portfolio_values[i, year - 1] * (1 + random_return)
 
+                # For a dynamic withdrawal takes % of the yearly portfolio
+                if self.dynamic_withdraw:
+                    withdrawal = portfolio_values[i, year] * self.withdrawal_rate
+                else:
+                    withdrawal *=(1+self.inflation_rate)
                 # Subtract annual withdrawal from the portfolio
                 portfolio_values[i, year] -= withdrawal
 
@@ -190,11 +202,11 @@ class SimulationApp:
                     depletion_count += 1  # Increment the depletion counter
                     break  # End simulation for this portfolio once it's depleted
 
-        # Calculate the probability of portfolio depletion before 40 years
+        # Calculate the probability of portfolio depletion before self.yearss
         depletion_probability = (depletion_count / self.simulations) * 100  # Percentage of simulations with depletion
 
         # Adjust inflation impact
-        inflation_factor = (1 + self.inflation_rate) ** self.years  # Factor to account for 40 years of inflation
+        inflation_factor = (1 + self.inflation_rate) ** self.years  # Factor to account for self.years of inflation
         inflation_adjusted_mean_final_value = np.mean(portfolio_values[:, -1]) / inflation_factor  # Adjusted portfolio mean
 
         # Plot portfolio values for all simulations
@@ -213,12 +225,20 @@ class SimulationApp:
         mean_final_value = np.mean(final_values)  # Calculate the mean final portfolio value
         std_final_value = np.std(final_values)  # Calculate the standard deviation of final portfolio values
         inflation_adjusted_std_final_val = std_final_value / inflation_factor
+        inflation_adjusted_final_withdraw = inflation_adjusted_mean_final_value*self.withdrawal_rate
+        if self.dynamic_withdraw:
+            inflation_adjusted_final_withdraw = inflation_adjusted_mean_final_value * self.withdrawal_rate
+        else:
+            inflation_adjusted_final_withdraw = self.initial_investment * self.withdrawal_rate
+            if inflation_adjusted_mean_final_value < inflation_adjusted_final_withdraw:
+                inflation_adjusted_final_withdraw = inflation_adjusted_final_withdraw
 
         # Prepare result text
-        result_text = (f"Without inflation- Mean final portfolio value: £{mean_final_value:.2f}\n"
-                       f"Without inflation  - SD final portfolio value: £{std_final_value:.2f}\n"
-                       f"Inflation-adjusted mean final portfolio value: £{inflation_adjusted_mean_final_value:.2f}\n"
-                       f"Inflation-adjusted - SD final portfolio value: £{inflation_adjusted_std_final_val:.2f}\n"
+        result_text = (f"Without inflation - Mean final portfolio value: £{mean_final_value:.2f}\n"
+                       f"Without inflation -   SD final portfolio value: £{std_final_value:.2f}\n"
+                       f"Inflation adjusted  Mean final portfolio value: £{inflation_adjusted_mean_final_value:.2f}\n"
+                       f"Inflation adjusted -  SD final portfolio value: £{inflation_adjusted_std_final_val:.2f}\n"
+                       f"Inflation adjusted -  Withdrawal at final year: £{inflation_adjusted_final_withdraw:.2f}\n"
                        f"Probability of portfolio depletion before {self.years} years: {depletion_probability:.2f}%")
 
         # Display results in read-only text box
@@ -227,22 +247,23 @@ class SimulationApp:
         self.result_box.insert(tk.END, result_text)
         self.result_box.config(state='disabled')
 
-        # Print results
+        # Print results on the console
         print(f"\nInitial conditions")
         print(f"==================")
         print(f"     Portfolio initial value: £{self.initial_investment}")
         print(f"              Inflation rate: {self.inflation_rate*100:.2f}%")
         print(f"   Expected portfolio return: {self.mean_return*100:.2f}%")
-        print(f"  Withdrawal amount per year: £{withdrawal}")
+        print(f"  Withdrawal amount per year: £{withdrawal:.2f}")
         print(f"      Annual Withdrawal rate: {self.withdrawal_rate}")
         print(f"Simulation duration in years: {self.years}")
         print("")
         print("Results:")
         print("========")
-        print(f"Without inflation- Mean final portfolio value: £{mean_final_value:.2f}")
-        print(f"Without inflation  - SD final portfolio value: £{std_final_value:.2f}")
-        print(f"Inflation-adjusted mean final portfolio value: £{inflation_adjusted_mean_final_value:.2f}")
-        print(f"Inflation-adjusted - SD final portfolio value: £{inflation_adjusted_std_final_val:.2f}")
+        print(f"Without inflation - Mean final portfolio value: £{mean_final_value:.2f}")
+        print(f"Without inflation -   SD final portfolio value: £{std_final_value:.2f}")
+        print(f"Inflation adjusted  Mean final portfolio value: £{inflation_adjusted_mean_final_value:.2f}")
+        print(f"Inflation adjusted -  SD final portfolio value: £{inflation_adjusted_std_final_val:.2f}")
+        print(f"Inflation adjusted -  Withdrawal at final year: £{inflation_adjusted_final_withdraw:.2f}")
         print(f"Probability of portfolio depletion before {self.years} years: {depletion_probability:.2f}%")
 
     def run(self):
@@ -275,12 +296,12 @@ def main():
         help='Duration of the simulation in years (e.g. 30 for 30 years)',
         default=30)
     parser.add_argument(
-        '-s', '--simulations',
+        '-n', '--nb_simulations',
         type=int,
         help='Total number of simulations to model potential outcomes (e.g. 1000 for a 1000 simulations)',
         default=3000)
     parser.add_argument(
-        '-d', '--display',
+        '-s', '--show',
         action='store_true',
         help='Display the simulations',
         default=False)
@@ -289,6 +310,12 @@ def main():
         type=float,
         default="0.039",
         help=r'Average history inflation (e.g. 0.039 for 3.9% in UK over 20years)')
+    parser.add_argument(
+        "-d", '--dynamic_withdraw',
+        action='store_true',
+        help=r'Dynamic withdrawal: withdra a % of yearly portfolio',
+        default=False)
+
     parser.add_argument(
         "-w", "--withdrawal_rate",
         type=float,
@@ -300,10 +327,11 @@ def main():
                            mean_return=args.mean_return,
                            volatility=args.volatility,
                            years=args.years,
-                           simulations=args.simulations,
-                           plt_show=args.display,
+                           simulations=args.nb_simulations,
+                           plt_show=args.show,
                            inflation_rate=args.inflation_rate,
-                           withdrawal_rate=args.withdrawal_rate)
+                           withdrawal_rate=args.withdrawal_rate,
+                           dynamic_withdraw=args.dynamic_withdraw)
     app.run()
 
 if __name__ == "__main__":
