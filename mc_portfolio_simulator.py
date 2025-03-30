@@ -91,7 +91,7 @@ class SimulationApp:
         self.plt_show = kwargs['plt_show']
         self.withdrawal_rate = kwargs['withdrawal_rate']
         self.inflation_rate = kwargs['inflation_rate']
-        
+
         self.root = tk.Tk()
         self.root.title("Monte Carlo Simulation of Portfolio")
 
@@ -130,7 +130,7 @@ class SimulationApp:
         self.entry_withdrawal_rate = tk.Entry(self.root)
         self.entry_withdrawal_rate.insert(0, str(self.withdrawal_rate))
         self.entry_withdrawal_rate.grid(row=6, column=1)
-        
+
         # Checkbox for Show plot
         self.plt_show_tk = tk.BooleanVar(value=self.plt_show)
         self.checkbox_show_plot = tk.Checkbutton(self.root, text="Show plot", variable=self.plt_show_tk)
@@ -154,7 +154,7 @@ class SimulationApp:
             self.simulations = int(self.entry_simulations.get())
             self.inflation_rate = float(self.entry_inflation_rate.get())
             self.withdrawal_rate = float(self.entry_withdrawal_rate.get())
-            
+
             # Display the values for debugging (you can replace this with your actual processing logic)
             #messagebox.showinfo("Input Values", f"Initial Investment: {self.initial_investment}\n"
             #                                    f"Mean Return: {self.mean_return}\n"
@@ -163,7 +163,7 @@ class SimulationApp:
             #                                    f"Simulations: {self.simulations}\n"
             #                                    f"Inflation Rate: {self.inflation_rate}\n"
             #                                    f"Withdrawal Rate: {self.withdrawal_rate}")
-            self.monte_carlo_simulation()                                    
+            self.monte_carlo_simulation()
         except ValueError as e:
             messagebox.showerror("Invalid Input", "Please make sure all inputs are valid.")
 
