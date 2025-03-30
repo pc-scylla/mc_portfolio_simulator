@@ -8,16 +8,16 @@
 # How to run:
 #############
 # To see the simulation plot and result
-# python .\mc_portfolio_simulator.py -d 
-# 
+# python .\mc_portfolio_simulator.py -d
+#
 # To see the result
 # python .\mc_portfolio_simulator.py
 #
-# Historical data  
+# Historical data
 # Ref: https://curvo.eu/backtest/en/market-index/sp-500?currency=eur
 #   Time period February 1992 to February 2025 for S&P500
 #   Average annualised return = 11.21% ----> use 7% to be conservative
-#   Annualised standard deviation of the monthly excess returns = 15.20% 
+#   Annualised standard deviation of the monthly excess returns = 15.20%
 #   Also the Sharpe ratio of 0.69.
 #
 ###############################################################################
@@ -125,7 +125,7 @@ def monte_carlo_simulation(**kwargs):
     final_values = portfolio_values[:, -1]  # Extract final portfolio values after 40 years
     mean_final_value = np.mean(final_values)  # Calculate the mean final portfolio value
     std_final_value = np.std(final_values)  # Calculate the standard deviation of final portfolio values
-    inflation_adjusted_std_final_val = std_final_value / inflation_factor 
+    inflation_adjusted_std_final_val = std_final_value / inflation_factor
     # Print results
     print(f"\nInitial conditions")
     print(f"==================")
@@ -145,7 +145,7 @@ def monte_carlo_simulation(**kwargs):
     print(f"Probability of portfolio depletion before {years} years: {depletion_probability:.2f}%")
 
 # -- Both args and kwargs --
-def print_args_nicely(*args, **kwargs):    
+def print_args_nicely(*args, **kwargs):
     for arg in args:
         print(f"P:{arg}")
     for kwarg, value in kwargs.items():
@@ -174,7 +174,7 @@ def main():
         help='Variation in annual returns due to market conditions (e.g. 0.015 for 15% volatility)')
     parser.add_argument(
         '-y', '--years',
-        type=int,  
+        type=int,
         help='Duration of the simulation in years (e.g. 30 for 30 years)',
         default=30)
     parser.add_argument(
@@ -198,7 +198,7 @@ def main():
         default="0.03",
         help=r'Constant withdrawal rate (e.g. 0.03 for 3% of initial investment per year')
     args = parser.parse_args()
-   
+
     monte_carlo_simulation(initial_investment=args.portfolio_value,
                            mean_return=args.mean_return,
                            volatility=args.volatility,
