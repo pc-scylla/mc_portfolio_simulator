@@ -284,55 +284,57 @@ def main():
     # Set up argument parser
     parser = argparse.ArgumentParser(
     description="A small python program to run Monte Carlo simulation on a portfolio e.g. python .\mc_portfolio_simulator.py")
+
     parser.add_argument(
         "-p", "--portfolio_value",
         type=int,
         default="500000",
-        help="Starting amount in the portfolio (e.g. 500000 for £500,000)")
+        help="Starting amount in the portfolio e.g. 500000 for £500,000")
     parser.add_argument(
         '-m', '--mean_return',
         choices=['0.06', '0.07', '0.08', '0.09'],
         type=float,
         default='0.07',
-        help='Average annual return expected from the portfolio (e.g. 0.07 for7%)')
+        help='Average annual return expected from the portfolio e.g. 0.07 for 7 percent')
     parser.add_argument(
-        "-v", "--volatility",
+         "-v", "--volatility",
         type=float,
         choices=["0.15", "0.16"],
         default="0.15",
-        help='Variation in annual returns due to market conditions (e.g. 0.015 for 15% volatility)')
+        help="Variation in annual returns due to market conditions e.g. 0.015 for 15 percent volatility")
     parser.add_argument(
         '-y', '--years',
         type=int,
-        help='Duration of the simulation in years (e.g. 30 for 30 years)',
+        help="Duration of the simulation in years (e.g. 30 for 30 years)",
         default=30)
     parser.add_argument(
         '-n', '--nb_simulations',
         type=int,
-        help='Total number of simulations to model potential outcomes (e.g. 1000 for a 1000 simulations)',
+        help="Total number of simulations to model potential outcomes (e.g. 1000 for a 1000 simulations)",
         default=3000)
     parser.add_argument(
         '-s', '--show',
         action='store_true',
-        help='Display the simulations',
+        help="Display the simulations",
         default=False)
     parser.add_argument(
         "-i", "--inflation_rate",
         type=float,
         default="0.039",
-        help=r'Average history inflation (e.g. 0.039 for 3.9% in UK over 20years)')
+        help="Average history inflation (e.g. 0.039 for 3.9 percent in UK over 20 years)")
     parser.add_argument(
         "-d", '--dynamic_withdraw',
         action='store_true',
-        help=r'Dynamic withdrawal: withdra a % of yearly portfolio',
+        help="Dynamic withdrawal: withdraw a percent of yearly portfolio",
         default=False)
-
     parser.add_argument(
         "-w", "--withdrawal_rate",
         type=float,
         default="0.03",
-        help=r'Constant withdrawal rate (e.g. 0.03 for 3% of initial investment per year')
+        help="Constant withdrawal rate (e.g. 0.03 for 3 percent of initial investment per year)")
+    
     args = parser.parse_args()
+    sys.exit(EXIT_SUCCESS)
 
     app = SimulationApp(initial_investment=args.portfolio_value,
                            mean_return=args.mean_return,
@@ -344,6 +346,9 @@ def main():
                            withdrawal_rate=args.withdrawal_rate,
                            dynamic_withdraw=args.dynamic_withdraw)
     app.run()
+    
+    # If everything runs successfully
+    sys.exit(EXIT_SUCCESS)
 
 if __name__ == "__main__":
     main()
