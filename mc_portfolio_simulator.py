@@ -151,8 +151,10 @@ class SimulationApp:
 
         self.result_box = tk.Text(self.root, height=10, width=60, state='disabled', wrap="word")
         self.result_box.grid(row=11, column=0, columnspan=2)
-
-    def on_submit(self):
+        self.root.bind("<Return>", self.on_submit)
+        self.root.bind("<KP_Enter>", self.on_submit)
+        
+    def on_submit(self, *args):
         try:
             self.initial_investment = float(self.entry_initial_investment.get())
             self.mean_return = float(self.entry_mean_return.get())
@@ -334,7 +336,6 @@ def main():
         help="Constant withdrawal rate (e.g. 0.03 for 3 percent of initial investment per year)")
     
     args = parser.parse_args()
-    sys.exit(EXIT_SUCCESS)
 
     app = SimulationApp(initial_investment=args.portfolio_value,
                            mean_return=args.mean_return,
