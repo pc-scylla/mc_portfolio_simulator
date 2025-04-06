@@ -254,6 +254,10 @@ class SimulationApp:
         self.result_box.delete('1.0', tk.END)
         self.result_box.insert(tk.END, result_text)
         self.result_box.config(state='disabled')
+        if inflation_adjusted_mean_final_value>=self.initial_investment:
+            self.result_box.config(background="palegreen")
+        else:
+            self.result_box.config(background="peachpuff")
 
         # Print results on the console
         print(f"")
