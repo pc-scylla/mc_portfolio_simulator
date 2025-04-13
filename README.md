@@ -16,6 +16,18 @@ The Monte Carlo Portfolio Simulator enables users to analyze portfolio performan
 Customize the simulation with flexible options to suit your needs.
 
 ---
+Note 1: when -s option is used or "Show plot" in the GUI is selected the
+program will also calculate and plot
+- the 95% confidence interval within two red lines
+- the median portfolio value as a green line
+- "Use log scale" option and "Show plot" option in the GUI are useful 
+ to show if the portfolio can run out in year using the 95% confidence 
+ interval.
+
+Note 2: the summary is green when the portfolio is greater then the initial
+value or peachpuff colour otherwise.
+
+---
 
 ## How to Run
 

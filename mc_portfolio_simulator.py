@@ -5,6 +5,13 @@
 # Description:
 #   A small python program to run Monte Carlo simulation on a portfolio
 #
+# When -s option is used or "Show plot" in the GUI is selected the
+# program will also calculate and display
+# - Plot 95% confidence interval within two red lines
+# - Plot median as a green line
+# "Use log scale" option and "Show plot" option in the GUI are useful 
+# to show if the can run out in year using the 95% confidence interval
+#
 # How to run:
 #############
 # To see the simulation plot and result
@@ -23,7 +30,7 @@
 ###############################################################################
 # MIT License
 #
-# Copyright (c) 2025 pc-scylla
+# Copyright (c) 2025 pc-scylla and letsrock
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -89,6 +96,7 @@ class SimulationApp:
         self.years = kwargs['years']
         self.simulations = kwargs['simulations']
         self.plt_show = kwargs['plt_show']
+        self.log_show = kwargs['log_show']
         self.withdrawal_rate = kwargs['withdrawal_rate']
         self.inflation_rate = kwargs['inflation_rate']
         self.dynamic_withdraw = kwargs['dynamic_withdraw']
@@ -96,64 +104,82 @@ class SimulationApp:
         self.root = tk.Tk()
         self.root.title("Monte Carlo Simulation of Portfolio")
 
+        rowi=0
         # Labels and entries
         tk.Label(self.root, text="Initial Investment:").grid(row=0, column=0, sticky="e")
         self.entry_initial_investment = tk.Entry(self.root)
         self.entry_initial_investment.insert(0, str(self.initial_investment))
-        self.entry_initial_investment.grid(row=0, column=1)
+        self.entry_initial_investment.grid(row=rowi, column=1)
 
+        rowi+=1
         tk.Label(self.root, text="Mean Return (e.g. 0.07 for 7%):").grid(row=1, column=0, sticky="e")
         self.entry_mean_return = tk.Entry(self.root)
         self.entry_mean_return.insert(0, str(self.mean_return))
-        self.entry_mean_return.grid(row=1, column=1)
+        self.entry_mean_return.grid(row=rowi, column=1)
 
+        rowi+=1
         tk.Label(self.root, text="Volatility (e.g. 0.15 for 15%):").grid(row=2, column=0, sticky="e")
         self.entry_volatility = tk.Entry(self.root)
         self.entry_volatility.insert(0, str(self.volatility))
-        self.entry_volatility.grid(row=2, column=1)
+        self.entry_volatility.grid(row=rowi, column=1)
 
+        rowi+=1
         tk.Label(self.root, text="Years:").grid(row=3, column=0, sticky="e")
         self.entry_years = tk.Entry(self.root)
         self.entry_years.insert(0, str(self.years))
-        self.entry_years.grid(row=3, column=1)
+        self.entry_years.grid(row=rowi, column=1)
 
+        rowi+=1
         tk.Label(self.root, text="Simulations:").grid(row=4, column=0, sticky="e")
         self.entry_simulations = tk.Entry(self.root)
         self.entry_simulations.insert(0, str(self.simulations))
-        self.entry_simulations.grid(row=4, column=1)
+        self.entry_simulations.grid(row=rowi, column=1)
 
+        rowi+=1
         tk.Label(self.root, text="Inflation Rate (e.g. 0.039 for 3.9%:").grid(row=5, column=0, sticky="e")
         self.entry_inflation_rate = tk.Entry(self.root)
         self.entry_inflation_rate.insert(0, str(self.inflation_rate))
-        self.entry_inflation_rate.grid(row=5, column=1)
+        self.entry_inflation_rate.grid(row=rowi, column=1)
 
+        rowi+=1
         tk.Label(self.root, text="Withdrawal Rate (e.g. 0.03 for 3%):").grid(row=6, column=0, sticky="e")
         self.entry_withdrawal_rate = tk.Entry(self.root)
         self.entry_withdrawal_rate.insert(0, str(self.withdrawal_rate))
-        self.entry_withdrawal_rate.grid(row=6, column=1)
+        self.entry_withdrawal_rate.grid(row=rowi, column=1)
+
 
         # Checkbox for dynamic withdrawal %withdrawal_rate of portfolio
+        rowi+=1
         self.dynamic_withdraw_tk = tk.BooleanVar(value=self.dynamic_withdraw)
         self.checkbox_dynamic_withdraw = tk.Checkbutton(self.root, text="Dynamic Withdrawal (Portfolio(Yn)*Withdrawal Rate)", variable=self.dynamic_withdraw_tk)
-        self.checkbox_dynamic_withdraw.grid(row=7, column=0, columnspan=2)
+        self.checkbox_dynamic_withdraw.grid(row=rowi, column=0, columnspan=2)
+
 
         # Checkbox for Show plot
+        rowi+=1
         self.plt_show_tk = tk.BooleanVar(value=self.plt_show)
         self.checkbox_show_plot = tk.Checkbutton(self.root, text="Show plot", variable=self.plt_show_tk)
-        self.checkbox_show_plot.grid(row=8, column=0, columnspan=2)
+        self.checkbox_show_plot.grid(row=rowi, column=0, columnspan=2)
+
+        # Checkbox for Show plot
+        rowi+=1
+        self.log_show_tk = tk.BooleanVar(value=self.log_show)
+        self.checkbox_log_plot = tk.Checkbutton(self.root, text="Use log scale", variable=self.log_show_tk)
+        self.checkbox_log_plot.grid(row=rowi, column=0, columnspan=2)
 
         # Submit button
+        rowi+=1
         submit_button = tk.Button(self.root, text="Submit", command=self.on_submit)
-        submit_button.grid(row=9, column=0, columnspan=2)
+        submit_button.grid(row=rowi, column=0, columnspan=2)
 
         # Read-only text box for results
-        tk.Label(self.root, text="Results:").grid(row=10, column=0, sticky="nw")
-
+        rowi+=1
+        tk.Label(self.root, text="Results:").grid(row=rowi, column=0, sticky="nw")
         self.result_box = tk.Text(self.root, height=10, width=60, state='disabled', wrap="word")
         self.result_box.grid(row=11, column=0, columnspan=2)
         self.root.bind("<Return>", self.on_submit)
         self.root.bind("<KP_Enter>", self.on_submit)
-        
+
     def on_submit(self, *args):
         try:
             self.initial_investment = float(self.entry_initial_investment.get())
@@ -164,6 +190,14 @@ class SimulationApp:
             self.inflation_rate = float(self.entry_inflation_rate.get())
             self.withdrawal_rate = float(self.entry_withdrawal_rate.get())
 
+            # Display the values for debugging (you can replace this with your actual processing logic)
+            #messagebox.showinfo("Input Values", f"Initial Investment: {self.initial_investment}\n"
+            #                                    f"Mean Return: {self.mean_return}\n"
+            #                                    f"Volatility: {self.volatility}\n"
+            #                                    f"Years: {self.years}\n"
+            #                                    f"Simulations: {self.simulations}\n"
+            #                                    f"Inflation Rate: {self.inflation_rate}\n"
+            #                                    f"Withdrawal Rate: {self.withdrawal_rate}")
             self.monte_carlo_simulation()
         except ValueError as e:
             messagebox.showerror("Invalid Input", "Please make sure all inputs are valid.")
@@ -206,13 +240,35 @@ class SimulationApp:
 
         # Plot portfolio values for all simulations
         self.plt_show = self.plt_show_tk.get()
+        self.log_scale = self.log_show_tk.get()
         if self.plt_show:
             plt.figure(figsize=(10, 6))  # Set figure size for the plot
             for i in range(self.simulations):
                 plt.plot(portfolio_values[i], alpha=0.1, color='blue')  # Plot portfolio values for each simulation
+
+            # Calculate 95% confidence interval
+            portfolio_values_array = np.array(portfolio_values)  # Convert to NumPy array for easier computation
+            lower_bound = np.percentile(portfolio_values_array, 2.5, axis=0)  # 2.5th percentile (lower bound)
+            upper_bound = np.percentile(portfolio_values_array, 97.5, axis=0)  # 97.5th percentile (upper bound)
+
+            # Calculate median
+            median_values = np.median(portfolio_values_array, axis=0)  # Median values across simulations
+
+            # Plot 95% confidence interval as a thick red line
+            plt.plot(lower_bound, color='red', linewidth=2, label='95% Confidence Interval (Lower)')
+            plt.plot(upper_bound, color='red', linewidth=2, label='95% Confidence Interval (Upper)')
+
+            # Plot median as a green line
+            plt.plot(median_values, color='green', linewidth=2, label='Median')
+
+            # Apply logarithmic scaling if enabled
+            if self.log_scale:
+                plt.yscale('log')  # Set y-axis to logarithmic scale
+
             plt.title('Monte Carlo Simulation of Portfolio Value with Constant Withdrawals')
             plt.xlabel('Years')  # Label for the x-axis (years of simulation)
             plt.ylabel('Portfolio Value (£)')  # Label for the y-axis (portfolio value in £)
+            plt.legend()  # Add a legend to the plot
             plt.show()  # Display the plot
 
         # Summary Statistics
@@ -229,7 +285,7 @@ class SimulationApp:
                 inflation_adjusted_final_withdraw = inflation_adjusted_final_withdraw
 
         # Prepare result text
-        initial_yearly_withdrawal  = self.withdrawal_rate * self.initial_investment 
+        initial_yearly_withdrawal  = self.withdrawal_rate * self.initial_investment
         result_text = (f"Withdrawal amount at first year: £{initial_yearly_withdrawal:.0f}\n"
                        f"Without inflation\n"
                        f"     Mean final portfolio value: £{mean_final_value:.2f}\n"
@@ -326,11 +382,16 @@ def main():
         help="Dynamic withdrawal: withdraw a percent of yearly portfolio",
         default=False)
     parser.add_argument(
+        "-l", '--log_scale',
+        action='store_true',
+        help="Display with logarithmic scale",
+        default=False)
+    parser.add_argument(
         "-w", "--withdrawal_rate",
         type=float,
         default="0.03",
         help="Constant withdrawal rate (e.g. 0.03 for 3 percent of initial investment per year)")
-    
+
     args = parser.parse_args()
 
     app = SimulationApp(initial_investment=args.portfolio_value,
@@ -339,11 +400,12 @@ def main():
                            years=args.years,
                            simulations=args.nb_simulations,
                            plt_show=args.show,
+                           log_show=args.log_scale,
                            inflation_rate=args.inflation_rate,
                            withdrawal_rate=args.withdrawal_rate,
                            dynamic_withdraw=args.dynamic_withdraw)
     app.run()
-    
+
     # If everything runs successfully
     sys.exit(EXIT_SUCCESS)
 
