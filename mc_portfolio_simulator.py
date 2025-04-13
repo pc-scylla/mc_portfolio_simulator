@@ -9,7 +9,7 @@
 # program will also calculate and display
 # - Plot 95% confidence interval within two red lines
 # - Plot median as a green line
-# "Use log scale" option and "Show plot" option in the GUI are useful 
+# "Use log scale" option and "Show plot" option in the GUI are useful
 # to show if the can run out in year using the 95% confidence interval
 #
 # How to run:
@@ -101,7 +101,7 @@ class SimulationApp:
         self.inflation_rate = kwargs['inflation_rate']
         self.dynamic_withdraw = kwargs['dynamic_withdraw']
 
-        self.root = tk.Tk()    
+        self.root = tk.Tk()
         self.root.title("Monte Carlo Simulation of Portfolio")
 
         rowi=0
@@ -162,26 +162,24 @@ class SimulationApp:
         # Checkbox for Show plot
         rowi+=1
         self.log_show_tk = tk.BooleanVar(value=self.log_show)
-        self.checkbox_log_plot = tk.Checkbutton(self.root, text="Use log scale", variable=self.log_show_tk)
+        self.checkbox_log_plot = tk.Checkbutton(self.root, text="Use log scale", variable=self.log_show_tk, command=self.on_log_show_tick)
         self.checkbox_log_plot.grid(row=rowi, column=0, columnspan=2)
 
-        
         # Add my own style for the submit button
         style = ttk.Style(self.root)
         style.theme_use("clam")
         style.map("CustomButton.TButton",
                 foreground=[('pressed', 'red'), ('active', 'green')],
                 # Note that background colour can't be changed in the default Windows theme. It works using "clam"
-                background=[('pressed', '!disabled', 'pale green'), ('active', 'snow')], 
-                font=[("pressed", ("TkDefaultFont", 11)) ] 
+                background=[('pressed', '!disabled', 'pale green'), ('active', 'snow')],
+                font=[("pressed", ("TkDefaultFont", 11)) ]
         )
 
-        # Submit button
+        # Submit button with separate style
         rowi+=1
-        #submit_button = tk.Button(self.root, text="Submit", style="CustomButton.TButton", command=self.on_submit)
         submit_button = ttk.Button(self.root, text="Submit", style="CustomButton.TButton", command=self.on_submit)
         submit_button.grid(row=rowi, column=0, columnspan=2)
-                
+
         # Add the "Result" label
         rowi+=1
         tk.Label(self.root, text="Results:").grid(row=rowi, column=0, sticky="nw")
@@ -192,6 +190,11 @@ class SimulationApp:
         self.result_box.grid(row=rowi, column=0, columnspan=2)
         self.root.bind("<Return>", self.on_submit)
         self.root.bind("<KP_Enter>", self.on_submit)
+
+    def on_log_show_tick(self, *args):
+        """when ticked the log scale is selected so lets plot"""
+        if  self.log_show_tk.get():
+            self.plt_show_tk.set(True)
 
     def on_submit(self, *args):
         try:
