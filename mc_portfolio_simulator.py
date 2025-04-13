@@ -101,7 +101,7 @@ class SimulationApp:
         self.inflation_rate = kwargs['inflation_rate']
         self.dynamic_withdraw = kwargs['dynamic_withdraw']
 
-        self.root = tk.Tk()
+        self.root = tk.Tk()    
         self.root.title("Monte Carlo Simulation of Portfolio")
 
         rowi=0
@@ -147,13 +147,11 @@ class SimulationApp:
         self.entry_withdrawal_rate.insert(0, str(self.withdrawal_rate))
         self.entry_withdrawal_rate.grid(row=rowi, column=1)
 
-
         # Checkbox for dynamic withdrawal %withdrawal_rate of portfolio
         rowi+=1
         self.dynamic_withdraw_tk = tk.BooleanVar(value=self.dynamic_withdraw)
         self.checkbox_dynamic_withdraw = tk.Checkbutton(self.root, text="Dynamic Withdrawal (Portfolio(Yn)*Withdrawal Rate)", variable=self.dynamic_withdraw_tk)
         self.checkbox_dynamic_withdraw.grid(row=rowi, column=0, columnspan=2)
-
 
         # Checkbox for Show plot
         rowi+=1
@@ -167,16 +165,31 @@ class SimulationApp:
         self.checkbox_log_plot = tk.Checkbutton(self.root, text="Use log scale", variable=self.log_show_tk)
         self.checkbox_log_plot.grid(row=rowi, column=0, columnspan=2)
 
+        
+        # Add my own style for the submit button
+        style = ttk.Style(self.root)
+        style.theme_use("clam")
+        style.map("CustomButton.TButton",
+                foreground=[('pressed', 'red'), ('active', 'green')],
+                # Note that background colour can't be changed in the default Windows theme. It works using "clam"
+                background=[('pressed', '!disabled', 'pale green'), ('active', 'snow')], 
+                font=[("pressed", ("TkDefaultFont", 11)) ] 
+        )
+
         # Submit button
         rowi+=1
-        submit_button = tk.Button(self.root, text="Submit", command=self.on_submit)
+        #submit_button = tk.Button(self.root, text="Submit", style="CustomButton.TButton", command=self.on_submit)
+        submit_button = ttk.Button(self.root, text="Submit", style="CustomButton.TButton", command=self.on_submit)
         submit_button.grid(row=rowi, column=0, columnspan=2)
+                
+        # Add the "Result" label
+        rowi+=1
+        tk.Label(self.root, text="Results:").grid(row=rowi, column=0, sticky="nw")
 
         # Read-only text box for results
         rowi+=1
-        tk.Label(self.root, text="Results:").grid(row=rowi, column=0, sticky="nw")
         self.result_box = tk.Text(self.root, height=10, width=60, state='disabled', wrap="word")
-        self.result_box.grid(row=11, column=0, columnspan=2)
+        self.result_box.grid(row=rowi, column=0, columnspan=2)
         self.root.bind("<Return>", self.on_submit)
         self.root.bind("<KP_Enter>", self.on_submit)
 
