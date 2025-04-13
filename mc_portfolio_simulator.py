@@ -164,14 +164,6 @@ class SimulationApp:
             self.inflation_rate = float(self.entry_inflation_rate.get())
             self.withdrawal_rate = float(self.entry_withdrawal_rate.get())
 
-            # Display the values for debugging (you can replace this with your actual processing logic)
-            #messagebox.showinfo("Input Values", f"Initial Investment: {self.initial_investment}\n"
-            #                                    f"Mean Return: {self.mean_return}\n"
-            #                                    f"Volatility: {self.volatility}\n"
-            #                                    f"Years: {self.years}\n"
-            #                                    f"Simulations: {self.simulations}\n"
-            #                                    f"Inflation Rate: {self.inflation_rate}\n"
-            #                                    f"Withdrawal Rate: {self.withdrawal_rate}")
             self.monte_carlo_simulation()
         except ValueError as e:
             messagebox.showerror("Invalid Input", "Please make sure all inputs are valid.")
