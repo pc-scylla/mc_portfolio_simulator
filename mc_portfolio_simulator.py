@@ -186,7 +186,7 @@ class SimulationApp:
 
         # Read-only text box for results
         rowi+=1
-        self.result_box = tk.Text(self.root, height=10, width=60, state='disabled', wrap="word")
+        self.result_box = tk.Text(self.root, height=11, width=60, state='disabled', wrap="word")
         self.result_box.grid(row=rowi, column=0, columnspan=2)
         self.root.bind("<Return>", self.on_submit)
         self.root.bind("<KP_Enter>", self.on_submit)
@@ -236,8 +236,10 @@ class SimulationApp:
                 # For a dynamic withdrawal takes % of the yearly portfolio
                 if self.dynamic_withdraw:
                     withdrawal = portfolio_values[i, year] * self.withdrawal_rate
+                    withdrawals_text = "Dynamic Withdrawals ((Yn)*Rate)"
                 else:
                     withdrawal *=(1+self.inflation_rate)
+                    withdrawals_text = "Constant Withdrawals ((Y1)*Rate)"
                 # Subtract annual withdrawal from the portfolio
                 portfolio_values[i, year] -= withdrawal
 
@@ -281,7 +283,7 @@ class SimulationApp:
             if self.log_scale:
                 plt.yscale('log')  # Set y-axis to logarithmic scale
 
-            plt.title('Monte Carlo Simulation of Portfolio Value with Constant Withdrawals')
+            plt.title(f'Monte Carlo Simulation of Portfolio Value with {withdrawals_text}')
             plt.xlabel('Years')  # Label for the x-axis (years of simulation)
             plt.ylabel('Portfolio Value (£)')  # Label for the y-axis (portfolio value in £)
             plt.legend()  # Add a legend to the plot
@@ -302,15 +304,16 @@ class SimulationApp:
 
         # Prepare result text
         initial_yearly_withdrawal  = self.withdrawal_rate * self.initial_investment
-        result_text = (f"Withdrawal amount at first year: £{initial_yearly_withdrawal:.0f}\n"
-                       f"Without inflation\n"
+        result_text = (f"        Portfolio initial value: £{self.initial_investment}\n"
+                       f"Withdrawal amount at first year: £{initial_yearly_withdrawal:.0f}\n"
+                       f"Without inflation -------------\n"
                        f"     Mean final portfolio value: £{mean_final_value:.2f}\n"
                        f"  Std Dev final portfolio value: £{std_final_value:.2f}\n"
-                       f"Inflation adjusted\n"
+                       f"Inflation adjusted ------------\n"
                        f"     Mean final portfolio value: £{inflation_adjusted_mean_final_value:.2f}\n"
                        f"  Std Dev final portfolio value: £{inflation_adjusted_std_final_val:.2f}\n"
                        f"Withdrawal amount at final year: £{inflation_adjusted_final_withdraw:.0f}\n"
-                       f"Probability of depletion\n"
+                       f"Probability of depletion ------\n"
                        f" Probability of portfolio depletion before {self.years} years: {depletion_probability:.2f}%")
 
         # Display results in read-only text box
