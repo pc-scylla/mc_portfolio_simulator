@@ -333,7 +333,7 @@ class SimulationApp:
         print(f"        Portfolio initial value: £{self.initial_investment}")
         print(f"                 Inflation rate: {self.inflation_rate*100:.2f}%")
         print(f"      Expected portfolio return: {self.mean_return*100:.2f}%")
-        print(f"     Withdrawal amount per year: £{withdrawal:.2f}")
+        print(f"     Withdrawal amount per year: £{(self.initial_investment * self.withdrawal_rate):.2f}")
         print(f"         Annual Withdrawal rate: {self.withdrawal_rate}")
         print(f"   Simulation duration in years: {self.years}")
         print("")
