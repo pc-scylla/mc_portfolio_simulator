@@ -113,10 +113,10 @@ Same as before and tick
          Annual Withdrawal rate: 0.03
    Simulation duration in years: 30
 ```
-The plot uses log scale and show the following results with 95% confidence.
-* The first red line shows that in bad luck the portfoloi only lasted 17 years 
-* the green show the median and that the portfolio survives
-* the second shows the very lucky case when the portfolio survive and increase in value.
+The plot uses log scale and shows the following results with 95% confidence.
+* The first red line shows that in bad luck the portfolio only lasted 17 years.
+* The green show the median and that the portfolio survives
+* The second shows the very lucky case when the portfolio survive and increase in value.
 
 ![App Screenshot](images/mc-simulator-plot.png)
 
